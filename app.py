@@ -20,3 +20,7 @@ def query_db(query, args=(), one=False):
     return (rv[0] if rv else None) if one else rv
 
 app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return("home.html")
