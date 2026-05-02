@@ -23,4 +23,44 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return("home.html")
+    render_template("home.html")
+
+@app.route("/categories")
+def view_categories():
+    sql = "SELECT * FROM category"
+    categories = query_db(sql)
+    return render_template("categories.html", categories = categories)
+
+@app.route ("/add_category", methods = ["POST"])
+def add_category():
+    category_name = request.form ['name']
+    spending_limit = request.form ['spending_limit']
+    sql = "INSERT INTO category (name, spending_limit) VALUES (?, ?)"
+    query_db(sql,(category_name, spending_limit,))
+    get_db().commit()
+    return redirect (url_for("view_categories"))
+
+@app.route ("/edit_category/<int:id>", methods = ["POST"])
+def edit_category(id):
+    category_name = request.form ['name']
+    spending_limit = request.form ['spending_limit']
+    sql = "UPDATE category SET name =?, spending_limit = ? WHERE id = ?"
+    query_db(sql,(category_name, spending_limit,id,))
+    get_db().commit()
+    return redirect (url_for("view_categories"))
+
+@app.route("/delete_category/<int:id>")
+def delete_category(id):
+    sql = "DELETE FROM category WHERE id =?"
+    query_db(sql,(id,))
+    sql = "DELETE FROM expenses WHERE id =?"
+    query_db(sql,(id,))
+    get_db().commit()
+    return redirect (url_for("view_categories"))
+
+
+
+
+if __name__ == "__main__":
+    app.run(debug= True)
+
