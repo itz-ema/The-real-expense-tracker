@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories</title>
+</head>
+<body>
+    {% extends "base.html" %}
+    {% block content %}
+    <h2> Categories</h2>
+    
+    <table class = "table table-bordered">
+        <tr><th>Category</th><th>Spending Limit ($)</th><th>Actions</th></tr>
+        {%for category in categories%}
+            <tr>
+                <form method = "POST" action = "{{url_for ('edit_category', id=category[0]) }}">
+                    <td><input class = "form-control" name= "name" value = "{{category[1]}}"></td>
+                    <td><input class = "form-control" name= "spending_limit" value = "{{category[2]}}"></td>
+                    <td>
+                        <button class="btn btn-success btn-sm"> Save</button>
+                        <a href = "{{url_for ('delete_category', id=category[0])}}" class = "btn btn-danger btn-sm"> Delete</a>
+                    </td>
+                </form>
+            </tr>
+        {%endfor%} 
+    </table>
+
+    <form method = "POST" action = "{{url_for ('add_category')}}" class = "row g-2 mb-3">
+        <div class = "col-md-5"><input class = "form-control" name ="name" placeholder = "Category name" required></div>
+        <div class = "col-md-5"><input class = "form-control" name = "spending_limit" placeholder = "Spending limit" required></div>
+        <div class = "col-md-2"><button class = "btn btn-primary w-100">Add</button></div>
+    </form>
+
+
+
+    {%endblock%}
+
+</body>
+</html>
