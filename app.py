@@ -23,7 +23,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    render_template("home.html")
+    return render_template("home.html")
 
 @app.route("/categories")
 def view_categories():
