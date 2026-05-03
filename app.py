@@ -19,15 +19,15 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
-app = Flask(__name__)
-
 @app.route("/")
 def home():
-    sql = '''SELECT category.id, category.name, category.spending_limit 
-            IFNULL(SUM (expenses.amount), 0)) AS total_amount_spent FROM category 
-            LEFT JOIN expenses ON category.id = expenses.category_id    
+    sql = '''SELECT category.id, category.name, category.spending_limit,
+            IFNULL(SUM(expenses.amount_spent), 0) AS total_amount_spent
+            FROM category
+            LEFT JOIN expenses ON category.id = expenses.category_id
             GROUP BY category.id'''
     categories = query_db(sql)
+    get_db().commit()
     return render_template("home.html", categories = categories)
 
 @app.route("/categories")
