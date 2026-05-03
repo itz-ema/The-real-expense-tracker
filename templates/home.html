@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class = "mb-4"> Dashboard </h2>
+<div class = "row">
+    {%for category in categories%}
+        <div class = "col-md-4">
+            <div class = "card-mb-3">
+                {%if  category[3] > category[2] %}border-danger{%endif%}
+                <div class = "card-body">
+                    <h5>{{category[1]}}</h5>
+                    <p> Spent: ${{category[3]}}</p>
+                    <p> Limit: ${{category[2]}}</p>
+                    {%if category[3] > category[2]%}
+                        <span class = "badge bg-danger">Over Spending Detected</span>
+                    {%endif%}
+                </div>
+            </div>
+
+        </div>
+    {%endfor%}
+</div>
+
+
+       
+
+
+
+
+
+{%endblock%}
+</body>
+</html>
