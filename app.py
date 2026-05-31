@@ -1,4 +1,7 @@
-from flask import Flask, render_template, url_for, g, request, redirect
+from flask import Flask, render_template, url_for, g, request, redirect, flash
+from flask_login import Loginmanager,login_user, logout_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import date
 import sqlite3
 DATABASE = "database.db"
 app = Flask(__name__)
@@ -18,6 +21,12 @@ def query_db(query, args=(), one=False):
     rv = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
+
+app.route("/register")
+def register():
+    if request.method == "POST":
+        username = request.form['username']
+        password = generate_password_hash[request.form['password']]
 
 @app.route("/")
 def home():
@@ -66,7 +75,7 @@ def delete_category(id):
 
 @app.route("/view_expenses")
 def view_expenses():
-    sql = "SELECT expenses.id, expenses.name, expenses.amount_spent, category.name AS category FROM expenses JOIN category ON expenses.category_id = category.id"
+    sql = "SELECT expenses.id, expenses.name, expenses.amount_spent, expenses. date, category.name AS category FROM expenses JOIN category ON expenses.category_id = category.id"
     expenses = query_db(sql)
     sql = "SELECT * FROM category"
     categories = query_db(sql)
@@ -99,7 +108,6 @@ def delete_expenses(id):
     query_db(sql,(id,))
     get_db().commit()
     return redirect (url_for("view_expenses"))
-
 
 
 
