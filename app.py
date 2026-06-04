@@ -1,1 +1,66 @@
-from flask import Flask
+from flask import Flask, render_template, url_for, g, request, redirect
+import sqlite3
+DATABASE = "database.db"
+app = Flask(__name__)
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+def query_db(query, args=(), one=False):
+    cur = get_db().execute(query, args)
+    rv = cur.fetchall()
+    cur.close()
+    return (rv[0] if rv else None) if one else rv
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    render_template("home.html")
+
+@app.route("/categories")
+def view_categories():
+    sql = "SELECT * FROM category"
+    categories = query_db(sql)
+    return render_template("categories.html", categories = categories)
+
+@app.route ("/add_category", methods = ["POST"])
+def add_category():
+    category_name = request.form ['name']
+    spending_limit = request.form ['spending_limit']
+    sql = "INSERT INTO category (name, spending_limit) VALUES (?, ?)"
+    query_db(sql,(category_name, spending_limit,))
+    get_db().commit()
+    return redirect (url_for("view_categories"))
+
+@app.route ("/edit_category/<int:id>", methods = ["POST"])
+def edit_category(id):
+    category_name = request.form ['name']
+    spending_limit = request.form ['spending_limit']
+    sql = "UPDATE category SET name =?, spending_limit = ? WHERE id = ?"
+    query_db(sql,(category_name, spending_limit,id,))
+    get_db().commit()
+    return redirect (url_for("view_categories"))
+
+@app.route("/delete_category/<int:id>")
+def delete_category(id):
+    sql = "DELETE FROM category WHERE id =?"
+    query_db(sql,(id,))
+    sql = "DELETE FROM expenses WHERE id =?"
+    query_db(sql,(id,))
+    get_db().commit()
+    return redirect (url_for("view_categories"))
+
+
+
+
+if __name__ == "__main__":
+    app.run(debug= True)
+
