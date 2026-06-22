@@ -1,10 +1,15 @@
-from flask import Flask, render_template, url_for, g, request, redirect, flash
+from flask import Flask, render_template, url_for, g, request, redirect, flash, session
 from flask_login import LoginManager, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
 import sqlite3
+
+
 DATABASE = "database.db"
 app = Flask(__name__)
+
+app.config['SECRET_KEY'] = 'itsasecret'
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -22,11 +27,33 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
-app.route("/register")
-def register():
+app.route("/login", methods = ['get', 'post'])
+def login():
     if request.method == "POST":
-        username = request.form['username']
+        name = request.form['name']
         password = generate_password_hash[request.form['password']]
+        sql = "SELECT * FROM user WHERE name = ?"
+        user = query_db (sql=sql, args=(name,), one = True)
+
+        if user:
+            if check_password_hash(user[2], password):
+                session['user']= user
+                flash("Logged in successfully")
+            else:
+                flash('Password incorrect')
+        else:
+            flash ('Username does not exist')
+    return render_template(login.html)
+
+app.route("/register", methods=['GET', 'POST'])
+def register ():
+        if request.method == "POST":
+            name = request.form['name']
+            password = generate_password_hash[request.form['password']]
+            sql = "INSERT INTO user (username, password) VALUES (?,?)"
+            query_db (sql,(name, password))
+    return render_template(register.html)
+
         
 
 @app.route("/")
