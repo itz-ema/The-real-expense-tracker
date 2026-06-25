@@ -27,6 +27,21 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
+
+
+        
+
+@app.route("/")
+def home():
+    sql = '''SELECT category.id, category.name, category.spending_limit,
+            IFNULL(SUM(expenses.amount_spent), 0) AS total_amount_spent
+            FROM category
+            LEFT JOIN expenses ON category.id = expenses.category_id
+            GROUP BY category.id'''
+    categories = query_db(sql)
+    get_db().commit()
+    return render_template("home.html", categories = categories)
+
 app.route("/login", methods = ['get', 'post'])
 def login():
     if request.method == "POST":
@@ -51,21 +66,9 @@ def register ():
             name = request.form['name']
             password = generate_password_hash[request.form['password']]
             sql = "INSERT INTO user (username, password) VALUES (?,?)"
-            query_db (sql,(name, password))
-    return render_template(register.html)
-
-        
-
-@app.route("/")
-def home():
-    sql = '''SELECT category.id, category.name, category.spending_limit,
-            IFNULL(SUM(expenses.amount_spent), 0) AS total_amount_spent
-            FROM category
-            LEFT JOIN expenses ON category.id = expenses.category_id
-            GROUP BY category.id'''
-    categories = query_db(sql)
-    get_db().commit()
-    return render_template("home.html", categories = categories)
+            query_db (sql,(name, password),)
+            flash('Registration successful!')
+        return redirect(url_for('/login'))
 
 @app.route("/categories")
 def view_categories():
