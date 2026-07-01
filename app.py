@@ -40,16 +40,23 @@ def home():
             GROUP BY category.id'''
     categories = query_db(sql)
     get_db().commit()
-    return render_template("home.html", categories = categories)
 
-app.route("/login", methods = ['get', 'post'])
+    user = session.get("user")
+    username = user[1] if user else None
+    return render_template("home.html", categories=categories, username=username)
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        name = request.form['name']
-        password = generate_password_hash[request.form['password']]
-        sql = "SELECT * FROM user WHERE name = ?"
-        user = query_db (sql=sql, args=(name,), one = True)
+        name = request.form["name"]
+        password = request.form["password"]
+        sql = "SELECT id, name, password FROM user WHERE name = ?"
+        user = query_db(sql,args=(name,), one=True)
 
+        if user and check_password_hash(user[2], password):
+            session["user"] = user
+            flash("Logged in successfully")
+            return redirect(url_for("home"))
         if user:
             if check_password_hash(user[2], password):
                 session['user']= user
@@ -58,17 +65,25 @@ def login():
                 flash('Password incorrect')
         else:
             flash ('Username does not exist')
-    return render_template(login.html)
+    return render_template("login.html")
 
-app.route("/register", methods=['GET', 'POST'])
-def register ():
-        if request.method == "POST":
-            name = request.form['name']
-            password = generate_password_hash[request.form['password']]
-            sql = "INSERT INTO user (username, password) VALUES (?,?)"
-            query_db (sql,(name, password),)
-            flash('Registration successful!')
-        return redirect(url_for('/login'))
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        name = request.form.get("name") or request.form.get("username")
+        password = request.form.get("password")
+
+        if not name or not password:
+            flash("Please enter both username and password")
+            return render_template("register.html")
+
+        password_hash = generate_password_hash(password)
+        sql = "INSERT INTO user (name, password) VALUES (?, ?)"
+        query_db(sql, (name, password_hash))
+        get_db().commit()
+        flash("Registration successful!")
+        return redirect(url_for("login"))
+    return render_template("register.html")
 
 @app.route("/categories")
 def view_categories():

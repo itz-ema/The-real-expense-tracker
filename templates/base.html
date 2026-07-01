@@ -12,15 +12,15 @@
             <div class = "container">
                 <a class = "navbar-brand" href = "{{url_for('home')}}"> Expense Calculator</a>
                 <div>
-                    <a class="bt btn-lightbtn-sm me-3" href = "url_for('login')"> Login</a>
-                    <a class="bt btn-light btn-sm me-3" href ="{{url_for ('view_categories')}}">Categories </a> 
+                    <a class="bt btn-lightbtn-sm me-3" href = "{{ url_for('login') }}"> Login</a>
+                    <a class="bt btn-light btn-sm me-3" href ="{ {url_for ('view_categories')}}">Categories </a> 
                     <a class="bt btn-light btn-sm me" href ="{{ url_for('view_expenses') }}"> Expenses </a> 
 
                 </div>
             </div>
         </nav>
-        <div class = "container">
-            {%block content%} {%endblock%}
+        <div class="container">
+            {%block content%}{%endblock%}
         </div>
 </body>
 </html>
