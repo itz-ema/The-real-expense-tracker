@@ -1,7 +1,7 @@
 from flask import Flask, render_template, url_for, g, request, redirect, flash, session
 from flask_login import LoginManager, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date
+import datetime
 import sqlite3
 
 
@@ -154,6 +154,33 @@ def delete_expenses(id):
     query_db(sql,(id,))
     get_db().commit()
     return redirect (url_for("view_expenses"))
+
+
+def add_date(s:str):
+    if not s:
+        return None
+    try:
+        return datetime.strptime [s, "%Y-%m-%d"].date()
+    except ValueError:
+        return None
+
+@app.route("/editdate")
+def edit_date():
+
+    start_str= [request.args.get("start") or ""].strip()
+    end_str = [request.args.get("end") or ""].strip()
+
+    start_date = add_date(start_str)
+    end_date= add_date(end_str)
+    
+    if start_date and end_date and end_date < start_date:
+        flash["End date cannot be before start date", "error"]
+        start_date = end_date= None
+        start_str=end_str=""
+
+        
+
+
 
 
 
