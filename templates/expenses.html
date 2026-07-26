@@ -10,22 +10,23 @@
     {%block content%}
     <h2>Expenses</h2>
     <table class="table table-bordered">
-        <tr><th>Category</th> <th>Description</th><th> Amount Spent</th><th>Actions</th></tr> 
+        <tr><th>Category</th> <th>Description</th><th> Amount Spent</th> <th> Date</th> <th>Actions</th></tr> 
         {%for expense in expenses%}
             <tr>
               <form method = "POST" action = "{{url_for ('edit_expenses', id=expense[0]) }}">
                 <td>
                     <select name= "category_id" class="form-control">
                         {% for category in categories %}
-                            <option value="{{category[0]}}" {% if category[1] == expense[3] %}selected {%endif%}> {{category[1]}}</option>
+                            <option value="{{category[0]}}" {% if category[0] == expense[5] %}selected{% endif %}>{{category[1]}}</option>
                         {%endfor%}
                     </select>
                 </td>
                 <td><input class = "form-control" name= "name" value = "{{expense[1]}}"></td>
-                <td><input class = "form-control" name= "amount_spent" value = "{{expense[2]}}"> </td>
+                <td><input class = "form-control" name= "amount_spent" value = "{{expense[2]}}"></td>
+                <td><input class="form-control" type="date" name="date" value="{{expense[3]}}"></td>
                 <td>
                     <button class="btn btn-success btn-sm"> Save</button>
-                    <a href = "{{url_for ('delete_expenses', id=expense[0])}}" class = "btn btn-danger btn-sm"> Delete</a>  
+                    <a href = "{{url_for ('delete_expenses', id=expense[0])}}" class = "btn btn-danger btn-sm"> Delete</a>
                 </td>
               </form>
             </tr>
@@ -42,9 +43,10 @@
                 {%endfor%}
             </select>
         </div>
-        <div class ="col-md-4"><input class="form-control" name="name" placeholder= "Description" required></div>
-        <div class ="col-md-3"><input class="form-control" name="amount_spent" placeholder= "Amount" required></div>
-        <div class ="col-md-2"><button class="btn btn-primary w-100" > Add </button></div>
+        <div class ="col-md-3"><input class="form-control" name="name" placeholder= "Description" required></div>
+        <div class ="col-md-2"><input class="form-control" type="date" name="date" required></div>
+        <div class ="col-md-2"><input class="form-control" name="amount_spent" placeholder= "Amount" required></div>
+        <div class ="col-md-2"><button class="btn btn-primary w-100"> Add </button></div>
     </form>
 
     

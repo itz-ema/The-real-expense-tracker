@@ -159,6 +159,15 @@ def delete_category(id):
     return redirect (url_for("view_categories"))
 
 
+def parse_date(value: str) -> str:
+    value = (value or "").strip()
+    if not value:
+        return datetime.date.today().isoformat()
+    try:
+        return datetime.datetime.strptime(value, "%Y-%m-%d").date().isoformat()
+    except ValueError:
+        return datetime.date.today().isoformat()
+
 @app.route("/view_expenses")
 def view_expenses():
     user = session.get("user")
@@ -166,7 +175,7 @@ def view_expenses():
         return redirect(url_for("login"))
     user_id = user[0]
 
-    sql = "SELECT expenses.id, expenses.name, expenses.amount_spent, expenses.date, category.name AS category FROM expenses JOIN category ON expenses.category_id = category.id WHERE expenses.user_id = ?"
+    sql = "SELECT expenses.id, expenses.name, expenses.amount_spent, strftime('%Y-%m-%d', expenses.date) AS date, category.name AS category, expenses.category_id FROM expenses JOIN category ON expenses.category_id = category.id WHERE expenses.user_id = ?"
     expenses = query_db(sql, args=(user_id,))
     sql = "SELECT * FROM category WHERE user_id = ?"
     categories = query_db(sql, args=(user_id,))
@@ -175,28 +184,42 @@ def view_expenses():
 @app.route ("/add_expenses", methods = ["POST"])
 def add_expenses():
     category_id = request.form['category_id']
-    expenses_name = request.form ['name']
-    amount_spent = request.form ['amount_spent']
+    expenses_name = request.form['name']
+    amount_spent = request.form['amount_spent']
+    date = parse_date(request.form.get('date'))
     user = session.get("user")
     if not user:
         return redirect(url_for("login"))
     user_id = user[0]
-    sql = "INSERT INTO expenses (category_id, name, amount_spent, user_id) VALUES (?, ?, ?, ?)"
-    query_db(sql,(category_id, expenses_name, amount_spent,user_id,))
-    get_db().commit()    
-    return redirect (url_for("view_expenses"))
+    sql = "SELECT name FROM category WHERE id = ? AND user_id = ?"
+    category = query_db(sql, (category_id, user_id), one=True)
+    if not category:
+        flash('Selected category does not exist')
+        return redirect(url_for('view_expenses'))
+    category_name = category[0]
+    sql = "INSERT INTO expenses (category_id, category_name, name, amount_spent, date, user_id) VALUES (?, ?, ?, ?, ?, ?)"
+    query_db(sql, (category_id, category_name, expenses_name, amount_spent, date, user_id,))
+    get_db().commit()
+    return redirect(url_for("view_expenses"))
 
 @app.route ("/edit_expenses/<int:id>", methods = ["POST"])
 def edit_expenses(id):
     category_id = request.form['category_id']
-    expenses_name = request.form ['name']
-    amount_spent = request.form ['amount_spent']
+    expenses_name = request.form['name']
+    amount_spent = request.form['amount_spent']
+    date = parse_date(request.form.get('date'))
     user = session.get("user")
     if not user:
         return redirect(url_for("login"))
     user_id = user[0]
-    sql = "UPDATE expenses SET category_id =?, name =?, amount_spent = ? WHERE id = ? AND user_id = ?"
-    query_db(sql,(category_id, expenses_name, amount_spent,id,user_id,))
+    sql = "SELECT name FROM category WHERE id = ? AND user_id = ?"
+    category = query_db(sql, (category_id, user_id), one=True)
+    if not category:
+        flash('Selected category does not exist')
+        return redirect(url_for('view_expenses'))
+    category_name = category[0]
+    sql = "UPDATE expenses SET category_id = ?, category_name = ?, name = ?, amount_spent = ?, date = ? WHERE id = ? AND user_id = ?"
+    query_db(sql, (category_id, category_name, expenses_name, amount_spent, date, id, user_id,))
     get_db().commit()
     return redirect (url_for("view_expenses"))
     
@@ -212,28 +235,9 @@ def delete_expenses(id):
     get_db().commit()
     return redirect (url_for("view_expenses"))
 
-
-def add_date(s:str):
-    if not s:
-        return None
-    try:
-        return datetime.strptime [s, "%Y-%m-%d"].date()
-    except ValueError:
-        return None
-
 @app.route("/editdate")
 def edit_date():
-
-    start_str= [request.args.get("start") or ""].strip()
-    end_str = [request.args.get("end") or ""].strip()
-
-    start_date = add_date(start_str)
-    end_date= add_date(end_str)
-    
-    if start_date and end_date and end_date < start_date:
-        flash["End date cannot be before start date", "error"]
-        start_date = end_date= None
-        start_str=end_str=""
+    return redirect(url_for("view_expenses"))
 
         
 
