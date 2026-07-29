@@ -6,6 +6,47 @@
 {% if username %}
     <h4 class="mb-4">Welcome, {{ username }}!</h4>
 {% endif %}
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-4">
+        <input class="form-control" type="month" name="month" value="{{ selected_month }}">
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100" type="submit">View</button>
+    </div>
+</form>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Spending by category for {{ selected_month }}</h5>
+                {% if pie_segments %}
+                    <svg width="260" height="260" viewBox="0 0 220 220" role="img" aria-label="Pie chart of monthly spending">
+                        <circle cx="110" cy="110" r="70" fill="none" stroke="#e9ecef" stroke-width="40"></circle>
+                        {% for segment in pie_segments %}
+                            <circle cx="110" cy="110" r="70" fill="none" stroke="{{ segment.color }}" stroke-width="40" stroke-linecap="round"
+                                    stroke-dasharray="{{ segment.dasharray }}"
+                                    stroke-dashoffset="{{ segment.dashoffset }}"
+                                    transform="rotate(-90 110 110)"></circle>
+                        {% endfor %}
+                        <circle cx="110" cy="110" r="35" fill="white"></circle>
+                        <text x="110" y="105" text-anchor="middle" font-size="14" fill="#212529">{{ selected_month }}</text>
+                        <text x="110" y="126" text-anchor="middle" font-size="14" fill="#212529">Total</text>
+                    </svg>
+                    <ul class="mt-3">
+                        {% for segment in pie_segments %}
+                            <li><span style="color:{{ segment.color }};">■</span> {{ segment.name }} — ${{ segment.amount }} ({{ segment.percent }}%)</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">No expenses recorded for this month yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class = "row">
     {%for category in categories%}
         <div class = "col-md-4">

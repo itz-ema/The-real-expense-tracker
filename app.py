@@ -2,6 +2,7 @@ from flask import Flask, render_template, url_for, g, request, redirect, flash, 
 from flask_login import LoginManager, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
+import math
 import sqlite3
 
 
@@ -48,8 +49,45 @@ def query_db(query, args=(), one=False):
     return (rv[0] if rv else None) if one else rv
 
 
+def build_monthly_category_totals(expenses, month):
+    totals = {}
+    for expense in expenses:
+        expense_date = expense[3] if len(expense) > 3 else ""
+        category_name = expense[4] if len(expense) > 4 else ""
+        if expense_date.startswith(month) and category_name:
+            amount = float(expense[2] or 0)
+            totals[category_name] = totals.get(category_name, 0.0) + amount
+    return totals
 
-        
+
+def build_pie_chart_segments(totals):
+    colors = ["#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1", "#20c997", "#fd7e14"]
+    if not totals:
+        return []
+
+    total_value = sum(totals.values())
+    if total_value <= 0:
+        return []
+
+    radius = 70
+    circumference = 2 * math.pi * radius
+    offset = 0.0
+    segments = []
+
+    for index, (name, amount) in enumerate(totals.items()):
+        segment_length = circumference * (amount / total_value)
+        segments.append({
+            "name": name,
+            "amount": round(amount, 2),
+            "percent": round((amount / total_value) * 100, 1),
+            "color": colors[index % len(colors)],
+            "dasharray": f"{round(segment_length, 2)} {round(circumference - segment_length, 2)}",
+            "dashoffset": round(-offset, 2),
+        })
+        offset += segment_length
+
+    return segments
+
 
 @app.route("/")
 def home():
@@ -58,6 +96,8 @@ def home():
         return redirect(url_for("login"))
     user_id = user[0]
 
+    selected_month = request.args.get("month") or datetime.date.today().strftime("%Y-%m")
+
     sql = '''SELECT category.id, category.name, category.spending_limit,
             IFNULL(SUM(expenses.amount_spent), 0) AS total_amount_spent
             FROM category
@@ -65,9 +105,27 @@ def home():
             WHERE category.user_id = ?
             GROUP BY category.id'''
     categories = query_db(sql, args=(user_id,))
+
+    monthly_sql = '''SELECT expenses.id, expenses.name, expenses.amount_spent,
+                    strftime('%Y-%m-%d', expenses.date) AS date,
+                    category.name AS category, expenses.category_id
+                    FROM expenses
+                    JOIN category ON expenses.category_id = category.id
+                    WHERE expenses.user_id = ? AND strftime('%Y-%m', expenses.date) = ?'''
+    monthly_expenses = query_db(monthly_sql, args=(user_id, selected_month))
+    monthly_totals = build_monthly_category_totals(monthly_expenses, selected_month)
+    pie_segments = build_pie_chart_segments(monthly_totals)
+
     get_db().commit()
     username = user[1]
-    return render_template("home.html", categories=categories, username=username)
+    return render_template(
+        "home.html",
+        categories=categories,
+        username=username,
+        selected_month=selected_month,
+        monthly_totals=monthly_totals,
+        pie_segments=pie_segments,
+    )
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
