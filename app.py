@@ -89,7 +89,7 @@ def build_pie_chart_segments(totals):
     return segments
 
 
-@app.route("/")
+@app.route("/") #this will be the homepage/dashboard of the app
 def home():
     user = session.get("user")
     if not user:
