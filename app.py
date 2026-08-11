@@ -127,6 +127,10 @@ def home():
         pie_segments=pie_segments,
     )
 
+@app.route("/help")
+def help():
+    return render_template("help.html")
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
