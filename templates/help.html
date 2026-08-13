@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="help container">
+  <h1>How to use the Expense Tracker</h1>
+
+  <p>Welcome — this page provides a short guide to help you get the most out of the expense tracker.</p>
+
+  <h2>The Dashboard</h2>
+  <p>The dashboard displays an analysis of your spending. Use the month selector to view a pie chart for a specific month (if you have records for that month). The pie chart shows the percentage of spending by category. Below the chart you'll find a list showing the amount spent in each category and the spending limit you set for that category. If you exceed a category limit, a warning will appear under that category.</p>
+
+  <h2>Categories</h2>
+  <p>In the Categories section you add the categories you want to track (for example: Food, Utilities, Hobbies). For each category set a monthly spending limit — the app will compare your expenses to that limit and show warnings when you go over budget.</p>
+  <img src = "C:\Users\HP\Pictures\Screenshots\Screenshot 2026-08-13 114321.png" alt ="Using the categories page">
+  <h2>Expenses</h2>
+  <p>Record each transaction in the Expenses section. A typical expense entry includes:</p>
+  <ol>
+    <li>Select the <strong>category</strong> from the dropdown.</li>
+    <li>Enter a short <strong>description</strong> (e.g., "A bag of chips").</li>
+    <li>Choose the <strong>date</strong> of the transaction.</li>
+    <li>Enter the <strong>amount</strong> spent.</li>
+    <li>Click the button to add/save the expense.</li>
+  </ol>
+  <img src = "c:\Users\HP\Pictures\Screenshots\Screenshot 2026-08-14 060503.png" alt = "Using the expenses page ">
+
+  <h2>Tips</h2>
+  <ul>
+    <li>Use broad categories to keep tracking simple.</li>
+    <li>Set realistic limits so warnings are meaningful.</li>
+    <li>Review the dashboard regularly to spot trends.</li>
+  </ul>
+
+
+</div>
+
+{% endblock %}

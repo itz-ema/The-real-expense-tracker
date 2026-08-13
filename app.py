@@ -98,13 +98,13 @@ def home():
 
     selected_month = request.args.get("month") or datetime.date.today().strftime("%Y-%m")
 
-    sql = '''SELECT category.id, category.name, category.spending_limit,
-            IFNULL(SUM(expenses.amount_spent), 0) AS total_amount_spent
-            FROM category
-            LEFT JOIN expenses ON category.id = expenses.category_id
+    # compute category totals for the selected month only
+    sql = '''SELECT category.id, category.name, category.spending_limit, IFNULL(SUM(expenses.amount_spent), 0) AS total_amount_spent FROM category LEFT JOIN expenses ON category.id = expenses.category_id
+                AND expenses.user_id = ?
+                AND strftime('%Y-%m', expenses.date) = ?
             WHERE category.user_id = ?
             GROUP BY category.id'''
-    categories = query_db(sql, args=(user_id,))
+    categories = query_db(sql, args=(user_id, selected_month, user_id))
 
     monthly_sql = '''SELECT expenses.id, expenses.name, expenses.amount_spent,
                     strftime('%Y-%m-%d', expenses.date) AS date,
