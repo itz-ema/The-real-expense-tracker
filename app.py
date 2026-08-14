@@ -162,6 +162,11 @@ def register():
         if not name or not password:
             flash("Please enter both username and password")
             return render_template("register.html")
+        # prevent duplicate usernames
+        existing = query_db("SELECT id FROM user WHERE name = ?", (name,), one=True)
+        if existing:
+            flash("Username is already taken")
+            return render_template("register.html")
 
         password_hash = generate_password_hash(password)
         sql = "INSERT INTO user (name, password) VALUES (?, ?)"
