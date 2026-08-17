@@ -166,6 +166,7 @@ def register():
         existing = query_db("SELECT id FROM user WHERE name = ?", (name,), one=True)
         if existing:
             flash("Username is already taken")
+            flash ("Please choose a different username")
             return render_template("register.html")
 
         password_hash = generate_password_hash(password)
