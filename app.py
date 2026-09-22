@@ -62,6 +62,7 @@ def build_monthly_category_totals(expenses, month):
 def build_pie_chart_segments(totals):
     "Building the piechart that will hold the categoires by month"
     colors = ["#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1", "#20c997", "#fd7e14"]
+    #identifying the different colours for different sectors of the pie chart
     if not totals:
         return []
 
@@ -204,6 +205,7 @@ def add_category():
         return redirect(url_for("login"))
     user_id = user[0]
     sql = "INSERT INTO category (name, spending_limit, user_id) VALUES (?, ?, ?)"
+    #a new row is added to the database containing the category and corresponding data
     query_db(sql,(category_name, spending_limit, user_id,))
     get_db().commit()
     return redirect (url_for("view_categories"))
@@ -218,6 +220,7 @@ def edit_category(id_iterable):
         return redirect(url_for("login"))
     user_id = user[0]
     sql = "UPDATE category SET name =?, spending_limit = ? WHERE id = ? AND user_id = ?"
+    #the changes are added to the database and then displayed
     query_db(sql,(category_name, spending_limit,id_iterable,user_id,))
     get_db().commit()
     return redirect (url_for("view_categories"))
@@ -230,6 +233,7 @@ def delete_category(id_iterable):
         return redirect(url_for("login"))
     user_id = user[0]
     sql = "DELETE FROM category WHERE id =? AND user_id = ?"
+    #removes the category from the database
     query_db(sql,(id_iterable,user_id,))
     sql = "DELETE FROM expenses WHERE category_id =? AND user_id = ?"
     query_db(sql,(id_iterable,user_id,))
@@ -258,6 +262,9 @@ def view_expenses():
                 strftime('%Y-%m-%d', expenses.date)
                 AS date, category.name AS category, expenses.category_id FROM expenses 
                 JOIN category ON expenses.category_id = category.id WHERE expenses.user_id = ?"""
+    #everything needed for the expense page is gotten from the database
+    #the expense database is joined to the category database, to link
+    #category names, and match the category id to the expense.category_id
     expenses = query_db(sql, args=(user_id,))
     sql = "SELECT * FROM category WHERE user_id = ?"
     categories = query_db(sql, args=(user_id,))
@@ -266,51 +273,84 @@ def view_expenses():
 @app.route ("/add_expenses", methods = ["POST"])
 def add_expenses():
     "To add a new expense"
-    category_id = request.form['category_id']
-    expenses_name = request.form['name']
-    amount_spent = request.form['amount_spent']
+    category_id = request.form.get('category_id')
+    expenses_name = request.form.get('name')
+    amount_spent = request.form.get('amount_spent')
     date = parse_date(request.form.get('date'))
     user = session.get("user")
     if not user:
         return redirect(url_for("login"))
     user_id = user[0]
-    sql = "SELECT name FROM category WHERE id = ? AND user_id = ?"
+
+    try:
+        category_id = int(category_id)
+    except (TypeError, ValueError):
+        flash('Please select a valid category')
+        return redirect(url_for('view_expenses'))
+
+    try:
+        amount_spent = float(amount_spent)
+    except (TypeError, ValueError):
+        flash('Amount spent must be a number')
+        return redirect(url_for('view_expenses'))
+        #if the user inputs a value that is not a number into the amount spent,
+        # the app wil flash "amount must be a number".
+
+    sql = "SELECT id FROM category WHERE id = ? AND user_id = ?"
     category = query_db(sql, (category_id, user_id), one=True)
     if not category:
         flash('Selected category does not exist')
         return redirect(url_for('view_expenses'))
-    category_name = category[0]
-    sql = """INSERT INTO expenses (category_id, category_name,
-      name, amount_spent, date, user_id) VALUES (?, ?, ?, ?, ?, ?)"""
-    query_db(sql, (category_id, category_name, expenses_name, amount_spent, date, user_id,))
+
+    sql = """INSERT INTO expenses (category_id,
+      name, amount_spent, date, user_id) VALUES (?, ?, ?, ?, ?)"""
+    #the new expense and corresponding information is added into the database
+    query_db(sql, (category_id, expenses_name, amount_spent, date, user_id,))
     get_db().commit()
     return redirect(url_for("view_expenses"))
 
-@app.route ("/edit_expenses/<int:id>", methods = ["POST"])
+@app.route ("/edit_expenses/<int:id_iterable>", methods = ["POST"])
 def edit_expenses(id_iterable):
     "To make edits to already created expenses"
-    category_id = request.form['category_id']
-    expenses_name = request.form['name']
-    amount_spent = request.form['amount_spent']
+    category_id = request.form.get('category_id')
+    expenses_name = request.form.get('name')
+    amount_spent = request.form.get('amount_spent')
     date = parse_date(request.form.get('date'))
     user = session.get("user")
     if not user:
         return redirect(url_for("login"))
     user_id = user[0]
-    sql = "SELECT name FROM category WHERE id = ? AND user_id = ?"
+
+    try:
+        category_id = int(category_id)
+    except (TypeError, ValueError):
+        flash('Please select a valid category')
+        #this prevents the user from not selecting any category at all
+        return redirect(url_for('view_expenses'))
+
+    try:
+        #using the try funtion to prevent crashing and errors if the parameters are not met
+        amount_spent = float(amount_spent)
+    except (TypeError, ValueError):
+        flash('Amount spent must be a number')
+        #if the user inputs a value that is not a number into the amount spent,
+        # the app wil flash "amount must be a number".
+        return redirect(url_for('view_expenses'))
+
+    sql = "SELECT id FROM category WHERE id = ? AND user_id = ?"
     category = query_db(sql, (category_id, user_id), one=True)
     if not category:
         flash('Selected category does not exist')
         return redirect(url_for('view_expenses'))
-    category_name = category[0]
-    sql = """UPDATE expenses SET category_id = ?, category_name = ?, name = ?,
+
+    sql = """UPDATE expenses SET category_id = ?, name = ?,
              amount_spent = ?, date = ? WHERE id = ? AND user_id = ?"""
-    query_db(sql, (category_id, category_name, expenses_name,
-                   amount_spent, date, id_iterable, user_id,))
+    #inouts the changed expense into the database
+    query_db(sql, (category_id, expenses_name, amount_spent, date, id_iterable, user_id,))
     get_db().commit()
     return redirect (url_for("view_expenses"))
 
-@app.route("/delete_expenses/<int:id>")
+@app.route("/delete_expenses/<int:id_iterable>")
 def delete_expenses(id_iterable):
     "To delete expenses that are no longer needed"
     user = session.get("user")
@@ -318,13 +358,15 @@ def delete_expenses(id_iterable):
         return redirect(url_for("login"))
     user_id = user[0]
     sql = "DELETE FROM expenses WHERE id =? AND user_id = ?"
+    #deletes the expenses from the database
+    #the deleted expenses will no longer be displayed on expenses page
     query_db(sql,(id_iterable,user_id,))
     get_db().commit()
     return redirect (url_for("view_expenses"))
 
 @app.route("/editdate")
 def edit_date():
-    "To edit the date of an already created expense"
+    "To edit the day of an already created expense"
     return redirect(url_for("view_expenses"))
 
 if __name__ == "__main__":
