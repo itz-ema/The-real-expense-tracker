@@ -68,12 +68,14 @@ def build_pie_chart_segments(totals):
 
     total_value = sum(totals.values())
     if total_value <= 0:
-        return []
+        return [] #if nothing has been inputted, the piechart will be blank
 
     radius = 70
     circumference = 2 * math.pi * radius
     offset = 0.0
     segments = []
+    #defining how big the piechart will be
+    #segments are left blank and will be determined by expense values
 
     for index, (name, amount) in enumerate(totals.items()):
         segment_length = circumference * (amount / total_value)
@@ -86,6 +88,9 @@ def build_pie_chart_segments(totals):
             "dashoffset": round(-offset, 2),
         })
         offset += segment_length
+        #the amount spent is summed and rounded up to 2dp
+        #the percentage of that amount is taken, relative to the total amount spent for that month
+        #
 
     return segments
 
@@ -132,7 +137,7 @@ def home():
     )
 
 @app.route("/help") #this will be the route for the help page of the app
-def help_iterable(): #help iterable is used to allow redifining a built in
+def help_iterable(): #help iterable is used to allow redifining a built in variable
     "To direct the user to the help page which provides information on how to use the app"
     return render_template("help.html")
 
@@ -148,6 +153,7 @@ def login():
         if user and check_password_hash(user[2], password):
             session["user"] = user
             flash("Logged in successfully")
+            #if both the user and password are accurate
             return redirect(url_for("home"))
         if user:
             if check_password_hash(user[2], password):
@@ -167,17 +173,20 @@ def register():
         name = request.form.get("name") or request.form.get("username")
         password = request.form.get("password")
 
-        if not name or not password: #if both username and password field are left unfiled
+        if not name or not password: #if both username and password field are left unfilled
             flash("Please enter both username and password")
             return render_template("register.html")
         existing = query_db("SELECT id FROM user WHERE name = ?", (name,), one=True)
         if existing: # To prevent duplicate usernames
             flash("Username is already taken")
             flash ("Please choose a different username")
+            #user is required to use a username that is not already in the database
             return render_template("register.html")
 
         password_hash = generate_password_hash(password)
+        #securely stores the password on the database
         sql = "INSERT INTO user (name, password) VALUES (?, ?)"
+        #adds the new username and password into the database
         query_db(sql, (name, password_hash))
         get_db().commit()
         flash("Registration successful!")
@@ -192,6 +201,7 @@ def view_categories():
         return redirect(url_for("login"))
     user_id = user[0]
     sql = "SELECT * FROM category WHERE user_id = ?"
+    #get already existing categories and matching parameters from database
     categories = query_db(sql, args=(user_id,))
     return render_template("categories.html", categories=categories)
 
@@ -210,7 +220,7 @@ def add_category():
     get_db().commit()
     return redirect (url_for("view_categories"))
 
-@app.route ("/edit_category/<int:id>", methods = ["POST"])
+@app.route ("/edit_category/<int:id_iterable>", methods = ["POST"])
 def edit_category(id_iterable):
     "To make edits to already created category"
     category_name = request.form ['name']
@@ -225,7 +235,7 @@ def edit_category(id_iterable):
     get_db().commit()
     return redirect (url_for("view_categories"))
 
-@app.route("/delete_category/<int:id>")
+@app.route("/delete_category/<int:id_iterable>")
 def delete_category(id_iterable):
     "to delete an already created category and its corresponding amount limit"
     user = session.get("user")
