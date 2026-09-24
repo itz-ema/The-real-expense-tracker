@@ -1,5 +1,5 @@
 
-"Module providing the flask app necessities"
+"Modules needed to build the app"
 import math
 import sqlite3
 import datetime
@@ -9,10 +9,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 DATABASE = "database.db"
-app = Flask(__name__)
+app = Flask(__name__, static_folder="style")
 
 app.config['SECRET_KEY'] = 'itsasecret'
-
+#to protect user sessions
 
 def ensure_schema():
     """Ensure the DB has user_id columns on category and expenses tables."""
@@ -29,6 +29,7 @@ def ensure_schema():
         pass
     db.commit()
     db.close()
+    #helps to make db querying easier and less bulky
 
 
 ensure_schema()
@@ -243,9 +244,10 @@ def delete_category(id_iterable):
         return redirect(url_for("login"))
     user_id = user[0]
     sql = "DELETE FROM category WHERE id =? AND user_id = ?"
-    #removes the category from the database
+    #removes the whole row from the database
     query_db(sql,(id_iterable,user_id,))
     sql = "DELETE FROM expenses WHERE category_id =? AND user_id = ?"
+    #removes any expenses tied to that category from the expense page
     query_db(sql,(id_iterable,user_id,))
     get_db().commit()
     return redirect (url_for("view_categories"))
