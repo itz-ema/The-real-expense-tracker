@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 DATABASE = "database.db"
-app = Flask(__name__, static_folder="style")
+app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'itsasecret'
 #to protect user sessions
