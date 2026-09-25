@@ -48,6 +48,15 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
+def parse_spending_limit(value):
+    "setting boundaries for the spending limit "
+    try:
+        spending_limit = float(value)
+        #spending limit can be a decimal
+    except (TypeError, ValueError):
+        return None
+    return spending_limit if math.isfinite(spending_limit) and spending_limit >= 0 else None
+
 def build_monthly_category_totals(expenses, month):
     "To build monthly category tools"
     totals = {}
@@ -210,7 +219,10 @@ def view_categories():
 def add_category():
     "To add a new expense"
     category_name = request.form ['name']
-    spending_limit = request.form ['spending_limit']
+    spending_limit = parse_spending_limit(request.form ['spending_limit'])
+    if spending_limit is None:
+        flash("Spending limit must be a non-negative number.")
+        return redirect(url_for("view_categories"))
     user = session.get("user")
     if not user:
         return redirect(url_for("login"))
@@ -225,7 +237,12 @@ def add_category():
 def edit_category(id_iterable):
     "To make edits to already created category"
     category_name = request.form ['name']
-    spending_limit = request.form ['spending_limit']
+    spending_limit = parse_spending_limit(request.form ['spending_limit'])
+    #spending limit must meet certain criteria
+    if spending_limit is None:
+        flash("Spending limit must be a non-negative number.")
+        #spending limit is not allowed to be zero or lower
+        return redirect(url_for("view_categories"))
     user = session.get("user")
     if not user:
         return redirect(url_for("login"))
