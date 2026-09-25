@@ -28,13 +28,13 @@ p{
 body {
     min-height: 100vh;
     margin: 0;
-    color: var(--ink);
+    color: var(--line);
     background: var(--paper);
     font-family: Georgia, "Times New Roman", serif;
 }
 
 .app-navbar {
-    background: var(--ink);
+    background: var(--muted);
     box-shadow: 0 3px 18px rgba(24, 48, 68, 0.16);
 }
 
